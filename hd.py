@@ -3,10 +3,10 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-import seaborn as sns
+
 
 # Load dataset
-file_path = 'path/to/Heart dataset.xlsx'
+file_path = '/Users/daniyalrosli/Documents/isp610_cleaned.csv'
 dataset = pd.read_excel(file_path)
 
 # Handle missing values

@@ -1,30 +1,65 @@
+# Import necessary libraries
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
 
+# Load the dataset
+# Replace 'your_dataset.csv' with the path to your actual dataset
+df = pd.read_excel('fyp dataset.xlsx')
 
-# Load dataset
-file_path = '/Users/daniyalrosli/Documents/isp610_cleaned.csv'
-dataset = pd.read_excel(file_path)
+# Display the first few rows of the dataset
+print(df.head())
 
-# Handle missing values
-dataset.fillna(method='ffill', inplace=True)
+# Step 1: Data Cleaning
+# Handling missing values
+# For numerical columns, we can fill missing values with the median
+# For categorical columns, we can fill missing values with the most frequent value
 
-# One-hot encoding for categorical variables
-dataset = pd.get_dummies(dataset, columns=['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope'])
+numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
+categorical_cols = df.select_dtypes(include=['object']).columns
 
-# Feature scaling
-scaler = StandardScaler()
-numerical_features = ['Age', 'RestingBP', 'Cholesterol', 'MaxHR', 'Oldpeak']
-dataset[numerical_features] = scaler.fit_transform(dataset[numerical_features])
+numerical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
 
-# Split the dataset into training and testing sets
-X = dataset.drop('HeartDisease', axis=1)
-y = dataset['HeartDisease']
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# Step 2: Feature Engineering
+# Create new features or modify existing ones if necessary
+
+# Example: Creating a new feature 'age_group' based on 'age'
+df['age_group'] = pd.cut(df['age'], bins=[0, 30, 40, 50, 60, 70, 80], labels=['<30', '30-39', '40-49', '50-59', '60-69', '70+'])
+
+# Step 3: Data Transformation
+# Combining numerical and categorical transformations using ColumnTransformer
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numerical_transformer, numerical_cols),
+        ('cat', categorical_transformer, categorical_cols)
+    ])
+
+# Step 4: Splitting the Data
+# Separate target variable 'target' from features
+
+X = df.drop(['target'], axis=1)
+y = df['target']
+
+# Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Visualize the data
-sns.pairplot(dataset)
-plt.show()
+# Apply the transformations to the training and testing data
+X_train_transformed = preprocessor.fit_transform(X_train)
+X_test_transformed = preprocessor.transform(X_test)
+
+# Display the transformed data
+print(X_train_transformed[:5])
+print(X_test_transformed[:5])

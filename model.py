@@ -1,3 +1,4 @@
+from pyexpat import model
 from sklearn.model_selection import GridSearchCV
 
 # Define the parameter grid
